@@ -40,7 +40,7 @@ endif ()
 # Creating entries for target: executable
 # ############################
 
-set(SOURCE_FILES main.cpp CGAL_defines.h node_configuration.h configuration_kd_tree.h bounding_box.h path_finder.h paired_configuration.h distances_map.h configuration_edge)
+set(SOURCE_FILES main.cpp CGAL_defines.h node_configuration.h configuration_kd_tree.h bounding_box.h path_finder.h paired_configuration.h distances_map.h)
 add_executable(MotionPlanningForTwoRobots ${SOURCE_FILES})
 
 add_to_cached_list(CGAL_EXECUTABLE_TARGETS MotionPlanningForTwoRobots)

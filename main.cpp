@@ -479,7 +479,7 @@ vector<pair<Point_2, Point_2>> findPath(const Point_2 &start1, const Point_2 &en
 	BoundingBox bbox(start1); bbox.addPoint(end1); bbox.addPoint(start2); bbox.addPoint(end2);
 	bbox.addPolygons(obstacles);
 	bbox.addPolygon(outer_obstacle);
-	ConfigurationKdTree manager(arr, trap_pl, bbox.getMaximumDiameter());
+	ConfigurationKdTree manager(trap_pl, bbox.getMaximumDiameter());
 	manager.insert(start1);
 	manager.insert(start2);
 	manager.insert(end1);
@@ -489,7 +489,7 @@ vector<pair<Point_2, Point_2>> findPath(const Point_2 &start1, const Point_2 &en
 	int n = 4;
 	vector<pair<Point_2, Point_2>> res;
 	while (res.empty()) {
-		res = pathFinder.findPath();
+		res = pathFinder.findPath(arr, trap_pl);
 		vector<Point_2> points;
 		points.reserve(n);
 		for (int i = 0; i < n; ++i)
@@ -497,7 +497,7 @@ vector<pair<Point_2, Point_2>> findPath(const Point_2 &start1, const Point_2 &en
 		manager.insert(points);
 		n <<= 1;
 	}
-	return pathFinder.findPath();
+	return pathFinder.findPath(arr, trap_pl);
 }
 
 
@@ -573,6 +573,9 @@ int main(int argc, char *argv[]) {
 	inputObstaclesFile.close();
 
 	boost::timer timer;
+	for (int i = 0; i < 10; i++) {
+		findPath(startPoint1, endPoint1, startPoint2, endPoint2, outer_obstacle, obstacles);
+	}
 	auto result = findPath(startPoint1, endPoint1, startPoint2, endPoint2, outer_obstacle, obstacles);
 	auto secs = timer.elapsed();
 	cout << "Path created:      " << secs << " secs" << endl;

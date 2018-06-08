@@ -10,7 +10,6 @@ using namespace std;
 
 class ConfigurationKdTree {
 private:
-	Arrangement_2& _arr;
 	const Trap_pl &_trap_pl;
 	const FT _maximumDiameter;
 
@@ -26,7 +25,7 @@ private:
 	}
 
 	shared_ptr<Configuration> to_configuration(const Point_2 &p) {
-		return shared_ptr<Configuration>(new Configuration(p, _arr, _trap_pl));
+		return shared_ptr<Configuration>(new Configuration(p));
 	}
 
 	void add_to_kdTree(const Point_2 &conf) {
@@ -39,28 +38,11 @@ private:
 		updateConnectionRadius();
 	}
 
-	bool canBeConnected(const Point_2 &p1, const Point_2 &p2) {
-		vector<CGAL::Object> zone_elems;
-		CGAL::zone(_arr, Kernel::Segment_2(p1, p2), back_inserter(zone_elems), _trap_pl);
-		Arrangement_2::Face_handle face;
-		for (auto &obj : zone_elems)
-			if (assign(face, obj))
-				if (!face->contained())
-					return false;
-		return true;
-	}
-
 	vector<Point_2> getNeighbors(const Point_2 &p) {
 		Fuzzy_iso_box box(p - _connectionRadiusVector, p + _connectionRadiusVector);
 		vector<Point_2> res;
 		_kdTree.search(back_inserter(res), box);
-		vector<Point_2> checkedRes;
-		for (auto &point : res) {
-			if (canBeConnected(p, point)) {
-				checkedRes.pb(point);
-			}
-		}
-		return checkedRes;
+		return res;
 	}
 
 	vector<shared_ptr<Configuration>> getNeighborsConfiguration(const Point_2 &p) {
@@ -76,10 +58,20 @@ private:
 	vector<shared_ptr<Configuration>> getNeighborsConfiguration(const Configuration &p) {
 		return getNeighborsConfiguration(p.getPoint());
 	}
+	bool configurationIsValid(shared_ptr<Configuration> &conf) {
+		Arrangement_2::Face_handle face;
+		auto res = _trap_pl.locate(conf->getPoint());
+		if (assign(face, res)) {
+			if (!face->contained()) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	bool insert(shared_ptr<Configuration> &conf) {
 		if (!is_in_set(_point_to_configuration, conf->getPoint())
-			&& conf->isValid()) {
+			&& configurationIsValid(conf)) {
 			for (auto &conf_neigh : getNeighborsConfiguration(*conf)) {
 				Configuration::addNeighbor(conf, conf_neigh);
 			}
@@ -91,8 +83,8 @@ private:
 
 
 public:
-	ConfigurationKdTree(Arrangement_2& arr, const Trap_pl &trap_pl, const FT maximumDiameter)
-		:_arr(arr), _trap_pl(trap_pl), _maximumDiameter(maximumDiameter) {}
+	ConfigurationKdTree(const Trap_pl &trap_pl, const FT maximumDiameter)
+		: _trap_pl(trap_pl), _maximumDiameter(maximumDiameter) {}
 
 	bool insert(const Point_2 &conf, bool shouldAddToKdTree = true) {
 		bool res = insert(to_configuration(conf));
